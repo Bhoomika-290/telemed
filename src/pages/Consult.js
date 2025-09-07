@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { FileText, User, Calendar, Stethoscope, Pills, ChevronLeft, Plus, Search, Filter } from 'lucide-react';
+import { FileText, User, Calendar, Stethoscope,AArrowDown, ChevronLeft, Plus, Search, Filter } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { consultationService, userService } from '../utils/firestoreUtils';
 import Button from '../components/Common/Button';
@@ -320,7 +320,7 @@ const Consult = () => {
                 Schedule Follow-up
               </Button>
               <Button variant="outline">
-                <Pills size={18} />
+                <AArrowDown size={18} />
                 Add Prescription
               </Button>
             </div>
@@ -426,7 +426,7 @@ const Consult = () => {
             <div className="input-group modern">
               <label className="input-label modern">Prescription</label>
               <div className="input-icon">
-                <Pills size={20} />
+                <AArrowDown size={20} />
               </div>
               <textarea
                 name="prescription"
