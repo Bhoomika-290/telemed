@@ -8,7 +8,7 @@ import {
   sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { auth, db } from '../firebase'; // Fixed: Changed from './firebase' to '../firebase'
 
 const AuthContext = createContext();
 
