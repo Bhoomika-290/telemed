@@ -6,6 +6,7 @@ import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
+import PublicHome from './pages/PublicHome';
 import Appointment from './pages/Appointment';
 import Consult from './pages/Consult';
 import VideoCall from './pages/VideoCall';
