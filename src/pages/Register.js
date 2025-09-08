@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Mail, Lock, User, Phone, MapPin, Calendar, Eye, EyeOff, Stethoscope } from 'lucide-react';
+import { Mail, Lock, User, Phone, MapPin, Calendar, Eye, EyeOff, Stethoscope, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Button from '../components/Common/Button';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
@@ -60,7 +60,7 @@ const Register = () => {
   };
 
   const validateStep1 = () => {
-    const { firstName, lastName, email, password, confirmPassword, userType } = formData;
+    const { firstName, lastName, email, password, confirmPassword } = formData;
     
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       toast.error('Please fill in all required fields');
@@ -146,62 +146,67 @@ const Register = () => {
 
   if (loading) {
     return (
-      <div className="auth-container">
+      <div className="register-container">
         <LoadingSpinner size="large" message="Creating your account..." />
       </div>
     );
   }
 
   const renderStep1 = () => (
-    <>
+    <div className="form-step">
       <div className="form-row">
-        <div className="input-group modern half-width">
-          <div className="input-icon">
-            <User size={20} />
+        <div className="input-group">
+          <label className="input-label">First Name *</label>
+          <div className="input-wrapper">
+            <User size={20} className="input-icon" />
+            <input
+              type="text"
+              name="firstName"
+              placeholder="Enter your first name"
+              value={formData.firstName}
+              onChange={handleInputChange}
+              className="input-field"
+              required
+            />
           </div>
-          <input
-            type="text"
-            name="firstName"
-            placeholder="First name"
-            value={formData.firstName}
-            onChange={handleInputChange}
-            className="input-field modern"
-            required
-          />
         </div>
         
-        <div className="input-group modern half-width">
+        <div className="input-group">
+          <label className="input-label">Last Name *</label>
+          <div className="input-wrapper">
+            <input
+              type="text"
+              name="lastName"
+              placeholder="Enter your last name"
+              value={formData.lastName}
+              onChange={handleInputChange}
+              className="input-field"
+              required
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="input-group">
+        <label className="input-label">Email Address *</label>
+        <div className="input-wrapper">
+          <Mail size={20} className="input-icon" />
           <input
-            type="text"
-            name="lastName"
-            placeholder="Last name"
-            value={formData.lastName}
+            type="email"
+            name="email"
+            placeholder="Enter your email address"
+            value={formData.email}
             onChange={handleInputChange}
-            className="input-field modern"
+            className="input-field"
             required
           />
         </div>
       </div>
       
-      <div className="input-group modern">
-        <div className="input-icon">
-          <Mail size={20} />
-        </div>
-        <input
-          type="email"
-          name="email"
-          placeholder="Email address"
-          value={formData.email}
-          onChange={handleInputChange}
-          className="input-field modern"
-          required
-        />
-      </div>
-      
-      <div className="input-group modern">
-        <label className="input-label modern">I am a:</label>
-        <div className="user-type-selector">
-          <label className={`user-type-option ${formData.userType === 'patient' ? 'selected' : ''}`}>
+      <div className="input-group">
+        <label className="input-label">I am a: *</label>
+        <div className="user-type-selection">
+          <label className={`user-type-card ${formData.userType === 'patient' ? 'selected' : ''}`}>
             <input
               type="radio"
               name="userType"
@@ -209,12 +214,13 @@ const Register = () => {
               checked={formData.userType === 'patient'}
               onChange={handleInputChange}
             />
-            <div className="option-content">
-              <div className="option-icon">👤</div>
-              <span>Patient</span>
+            <div className="card-content">
+              <div className="card-icon">👤</div>
+              <div className="card-title">Patient</div>
+              <div className="card-description">Seeking medical care</div>
             </div>
           </label>
-          <label className={`user-type-option ${formData.userType === 'doctor' ? 'selected' : ''}`}>
+          <label className={`user-type-card ${formData.userType === 'doctor' ? 'selected' : ''}`}>
             <input
               type="radio"
               name="userType"
@@ -222,98 +228,108 @@ const Register = () => {
               checked={formData.userType === 'doctor'}
               onChange={handleInputChange}
             />
-            <div className="option-content">
-              <div className="option-icon">👨‍⚕️</div>
-              <span>Doctor</span>
+            <div className="card-content">
+              <div className="card-icon">👨‍⚕️</div>
+              <div className="card-title">Doctor</div>
+              <div className="card-description">Healthcare provider</div>
             </div>
           </label>
         </div>
       </div>
       
-      <div className="input-group modern">
-        <div className="input-icon">
-          <Lock size={20} />
+      <div className="form-row">
+        <div className="input-group">
+          <label className="input-label">Password *</label>
+          <div className="input-wrapper">
+            <Lock size={20} className="input-icon" />
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              placeholder="Create a strong password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className="input-field"
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
-        <input
-          type={showPassword ? 'text' : 'password'}
-          name="password"
-          placeholder="Create password"
-          value={formData.password}
-          onChange={handleInputChange}
-          className="input-field modern"
-          required
-        />
-        <button
-          type="button"
-          className="password-toggle"
-          onClick={() => setShowPassword(!showPassword)}
-        >
-          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-        </button>
-      </div>
-      
-      <div className="input-group modern">
-        <div className="input-icon">
-          <Lock size={20} />
+        
+        <div className="input-group">
+          <label className="input-label">Confirm Password *</label>
+          <div className="input-wrapper">
+            <Lock size={20} className="input-icon" />
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              name="confirmPassword"
+              placeholder="Confirm your password"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              className="input-field"
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
-        <input
-          type={showConfirmPassword ? 'text' : 'password'}
-          name="confirmPassword"
-          placeholder="Confirm password"
-          value={formData.confirmPassword}
-          onChange={handleInputChange}
-          className="input-field modern"
-          required
-        />
-        <button
-          type="button"
-          className="password-toggle"
-          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-        >
-          {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-        </button>
       </div>
-    </>
+    </div>
   );
 
   const renderStep2 = () => (
-    <>
-      <div className="input-group modern">
-        <div className="input-icon">
-          <Phone size={20} />
-        </div>
-        <input
-          type="tel"
-          name="phone"
-          placeholder="Phone number"
-          value={formData.phone}
-          onChange={handleInputChange}
-          className="input-field modern"
-          required
-        />
-      </div>
-      
+    <div className="form-step">
       <div className="form-row">
-        <div className="input-group modern half-width">
-          <div className="input-icon">
-            <Calendar size={20} />
+        <div className="input-group">
+          <label className="input-label">Phone Number *</label>
+          <div className="input-wrapper">
+            <Phone size={20} className="input-icon" />
+            <input
+              type="tel"
+              name="phone"
+              placeholder="Enter your phone number"
+              value={formData.phone}
+              onChange={handleInputChange}
+              className="input-field"
+              required
+            />
           </div>
-          <input
-            type="date"
-            name="dateOfBirth"
-            value={formData.dateOfBirth}
-            onChange={handleInputChange}
-            className="input-field modern"
-            required
-          />
         </div>
         
-        <div className="input-group modern half-width">
+        <div className="input-group">
+          <label className="input-label">Date of Birth *</label>
+          <div className="input-wrapper">
+            <Calendar size={20} className="input-icon" />
+            <input
+              type="date"
+              name="dateOfBirth"
+              value={formData.dateOfBirth}
+              onChange={handleInputChange}
+              className="input-field"
+              required
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="input-group">
+        <label className="input-label">Gender</label>
+        <div className="input-wrapper">
           <select
             name="gender"
             value={formData.gender}
             onChange={handleInputChange}
-            className="input-field modern"
+            className="input-field"
           >
             <option value="">Select gender</option>
             <option value="male">Male</option>
@@ -324,191 +340,227 @@ const Register = () => {
         </div>
       </div>
       
-      <div className="input-group modern">
-        <div className="input-icon">
-          <MapPin size={20} />
+      <div className="input-group">
+        <label className="input-label">Address</label>
+        <div className="input-wrapper">
+          <MapPin size={20} className="input-icon" />
+          <textarea
+            name="address"
+            placeholder="Enter your address"
+            value={formData.address}
+            onChange={handleInputChange}
+            className="input-field textarea"
+            rows="3"
+          />
         </div>
-        <textarea
-          name="address"
-          placeholder="Address"
-          value={formData.address}
-          onChange={handleInputChange}
-          className="input-field modern"
-          rows="3"
-        />
       </div>
-    </>
+    </div>
   );
 
   const renderStep3 = () => {
     if (formData.userType === 'doctor') {
       return (
-        <>
-          <div className="input-group modern">
-            <input
-              type="text"
-              name="specialization"
-              placeholder="Medical specialization"
-              value={formData.specialization}
-              onChange={handleInputChange}
-              className="input-field modern"
-            />
+        <div className="form-step">
+          <div className="input-group">
+            <label className="input-label">Medical Specialization</label>
+            <div className="input-wrapper">
+              <Stethoscope size={20} className="input-icon" />
+              <input
+                type="text"
+                name="specialization"
+                placeholder="e.g., Cardiology, Pediatrics"
+                value={formData.specialization}
+                onChange={handleInputChange}
+                className="input-field"
+              />
+            </div>
           </div>
           
           <div className="form-row">
-            <div className="input-group modern half-width">
-              <input
-                type="text"
-                name="license"
-                placeholder="Medical license number"
-                value={formData.license}
-                onChange={handleInputChange}
-                className="input-field modern"
-              />
+            <div className="input-group">
+              <label className="input-label">License Number</label>
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  name="license"
+                  placeholder="Medical license number"
+                  value={formData.license}
+                  onChange={handleInputChange}
+                  className="input-field"
+                />
+              </div>
             </div>
             
-            <div className="input-group modern half-width">
+            <div className="input-group">
+              <label className="input-label">Years of Experience</label>
+              <div className="input-wrapper">
+                <input
+                  type="number"
+                  name="experience"
+                  placeholder="0"
+                  value={formData.experience}
+                  onChange={handleInputChange}
+                  className="input-field"
+                  min="0"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="input-group">
+            <label className="input-label">Consultation Fee (USD)</label>
+            <div className="input-wrapper">
               <input
                 type="number"
-                name="experience"
-                placeholder="Years of experience"
-                value={formData.experience}
+                name="consultationFee"
+                placeholder="0"
+                value={formData.consultationFee}
                 onChange={handleInputChange}
-                className="input-field modern"
+                className="input-field"
                 min="0"
               />
             </div>
           </div>
-          
-          <div className="input-group modern">
-            <input
-              type="number"
-              name="consultationFee"
-              placeholder="Consultation fee (USD)"
-              value={formData.consultationFee}
-              onChange={handleInputChange}
-              className="input-field modern"
-              min="0"
-            />
-          </div>
-        </>
+        </div>
       );
     } else {
       return (
-        <>
+        <div className="form-step">
           <div className="form-row">
-            <div className="input-group modern third-width">
-              <select
-                name="bloodType"
-                value={formData.bloodType}
-                onChange={handleInputChange}
-                className="input-field modern"
-              >
-                <option value="">Blood type</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-              </select>
+            <div className="input-group">
+              <label className="input-label">Blood Type</label>
+              <div className="input-wrapper">
+                <select
+                  name="bloodType"
+                  value={formData.bloodType}
+                  onChange={handleInputChange}
+                  className="input-field"
+                >
+                  <option value="">Select blood type</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </div>
             </div>
             
-            <div className="input-group modern third-width">
-              <input
-                type="number"
-                name="height"
-                placeholder="Height (cm)"
-                value={formData.height}
-                onChange={handleInputChange}
-                className="input-field modern"
-                min="0"
-              />
+            <div className="input-group">
+              <label className="input-label">Height (cm)</label>
+              <div className="input-wrapper">
+                <input
+                  type="number"
+                  name="height"
+                  placeholder="170"
+                  value={formData.height}
+                  onChange={handleInputChange}
+                  className="input-field"
+                  min="0"
+                />
+              </div>
             </div>
             
-            <div className="input-group modern third-width">
-              <input
-                type="number"
-                name="weight"
-                placeholder="Weight (kg)"
-                value={formData.weight}
-                onChange={handleInputChange}
-                className="input-field modern"
-                min="0"
-              />
+            <div className="input-group">
+              <label className="input-label">Weight (kg)</label>
+              <div className="input-wrapper">
+                <input
+                  type="number"
+                  name="weight"
+                  placeholder="70"
+                  value={formData.weight}
+                  onChange={handleInputChange}
+                  className="input-field"
+                  min="0"
+                />
+              </div>
             </div>
           </div>
           
-          <div className="section-title">Emergency Contact</div>
-          
-          <div className="input-group modern">
-            <input
-              type="text"
-              name="emergencyContact.name"
-              placeholder="Emergency contact name"
-              value={formData.emergencyContact.name}
-              onChange={handleInputChange}
-              className="input-field modern"
-            />
+          <div className="section-divider">
+            <h3>Emergency Contact</h3>
           </div>
           
-          <div className="form-row">
-            <div className="input-group modern half-width">
-              <input
-                type="tel"
-                name="emergencyContact.phone"
-                placeholder="Emergency contact phone"
-                value={formData.emergencyContact.phone}
-                onChange={handleInputChange}
-                className="input-field modern"
-              />
-            </div>
-            
-            <div className="input-group modern half-width">
+          <div className="input-group">
+            <label className="input-label">Contact Name</label>
+            <div className="input-wrapper">
+              <User size={20} className="input-icon" />
               <input
                 type="text"
-                name="emergencyContact.relationship"
-                placeholder="Relationship"
-                value={formData.emergencyContact.relationship}
+                name="emergencyContact.name"
+                placeholder="Emergency contact name"
+                value={formData.emergencyContact.name}
                 onChange={handleInputChange}
-                className="input-field modern"
+                className="input-field"
               />
             </div>
           </div>
-        </>
+          
+          <div className="form-row">
+            <div className="input-group">
+              <label className="input-label">Contact Phone</label>
+              <div className="input-wrapper">
+                <Phone size={20} className="input-icon" />
+                <input
+                  type="tel"
+                  name="emergencyContact.phone"
+                  placeholder="Emergency contact phone"
+                  value={formData.emergencyContact.phone}
+                  onChange={handleInputChange}
+                  className="input-field"
+                />
+              </div>
+            </div>
+            
+            <div className="input-group">
+              <label className="input-label">Relationship</label>
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  name="emergencyContact.relationship"
+                  placeholder="e.g., Parent, Spouse"
+                  value={formData.emergencyContact.relationship}
+                  onChange={handleInputChange}
+                  className="input-field"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       );
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-glass-card register">
-        <div className="auth-header">
-          <div className="logo-container">
+    <div className="register-container">
+      <div className="register-card">
+        <div className="register-header">
+          <div className="logo">
             <div className="logo-icon">
               <Stethoscope size={32} />
             </div>
             <h1>TeleMed+</h1>
           </div>
-          <h2>Create Account</h2>
-          <p>Join our healthcare community</p>
+          <h2>Create Your Account</h2>
+          <p>Join our healthcare community today</p>
         </div>
         
         {/* Progress Indicator */}
-        <div className="progress-indicator">
+        <div className="progress-steps">
           {[1, 2, 3].map((step) => (
-            <div key={step} className={`progress-step ${currentStep >= step ? 'active' : ''}`}>
-              <div className="step-number">{step}</div>
+            <div key={step} className={`progress-step ${currentStep >= step ? 'active' : ''} ${currentStep === step ? 'current' : ''}`}>
+              <div className="step-circle">{step}</div>
               <div className="step-label">
-                {step === 1 ? 'Account' : step === 2 ? 'Personal' : 'Additional'}
+                {step === 1 ? 'Account Info' : step === 2 ? 'Personal Details' : 'Additional Info'}
               </div>
             </div>
           ))}
         </div>
         
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form className="register-form" onSubmit={handleSubmit}>
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
@@ -521,9 +573,12 @@ const Register = () => {
                 onClick={handlePrevStep}
                 className="nav-button"
               >
+                <ArrowLeft size={18} />
                 Previous
               </Button>
             )}
+            
+            <div className="nav-spacer"></div>
             
             {currentStep < 3 ? (
               <Button 
@@ -533,12 +588,13 @@ const Register = () => {
                 className="nav-button"
               >
                 Next
+                <ArrowRight size={18} />
               </Button>
             ) : (
               <Button 
                 type="submit" 
                 variant="primary" 
-                className="auth-button modern"
+                className="nav-button"
                 disabled={loading}
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
@@ -547,22 +603,11 @@ const Register = () => {
           </div>
         </form>
         
-        <div className="auth-divider">
-          <span>Already have an account?</span>
+        <div className="register-footer">
+          <p>Already have an account? 
+            <Link to="/login" className="login-link">Sign in here</Link>
+          </p>
         </div>
-        
-        <div className="auth-footer">
-          <Link to="/login" className="auth-link modern">
-            Sign in instead
-          </Link>
-        </div>
-      </div>
-      
-      {/* Background decoration */}
-      <div className="auth-bg-decoration">
-        <div className="floating-shape shape-1"></div>
-        <div className="floating-shape shape-2"></div>
-        <div className="floating-shape shape-3"></div>
       </div>
     </div>
   );

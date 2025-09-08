@@ -5,7 +5,6 @@ import {
   VideoOff, 
   Mic, 
   MicOff, 
-  Phone, 
   PhoneOff, 
   MessageCircle, 
   Users, 
@@ -13,7 +12,12 @@ import {
   Monitor,
   Camera,
   Volume2,
-  VolumeX
+  VolumeX,
+  Calendar,
+  Clock,
+  User,
+  CheckCircle,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { appointmentService, consultationService } from '../utils/firestoreUtils';
@@ -182,12 +186,16 @@ const VideoCall = () => {
   const formatDateTime = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return {
+      date: date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      }),
+      time: date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    };
   };
 
   const getInitials = (name) => {
@@ -197,7 +205,7 @@ const VideoCall = () => {
 
   if (loading) {
     return (
-      <div className="page">
+      <div className="video-call-loading">
         <LoadingSpinner size="large" message="Loading video call interface..." />
       </div>
     );
@@ -205,7 +213,7 @@ const VideoCall = () => {
 
   if (!isCallActive) {
     return (
-      <div className="page fade-in">
+      <div className="video-call-setup">
         <div className="page-header">
           <div>
             <h1>Video Call</h1>
@@ -213,56 +221,74 @@ const VideoCall = () => {
           </div>
         </div>
 
-        <div className="call-setup">
-          <div className="setup-card">
-            <div className="setup-header">
-              <Video size={48} />
-              <h2>Start Video Call</h2>
-              <p>Choose an appointment to start a video consultation</p>
+        <div className="setup-content">
+          {/* Available Appointments */}
+          <div className="setup-card main-card">
+            <div className="card-header">
+              <div className="header-icon">
+                <Video size={32} />
+              </div>
+              <div className="header-content">
+                <h2>Start Video Call</h2>
+                <p>Choose an appointment to start a video consultation</p>
+              </div>
             </div>
             
             {availableAppointments.length > 0 ? (
-              <div className="patient-selection">
+              <div className="appointments-section">
                 <h3>Available Video Appointments</h3>
-                <div className="patient-list">
-                  {availableAppointments.map((appointment) => (
-                    <div key={appointment.id} className="patient-item">
-                      <div className="patient-avatar">
-                        <div className="avatar-circle">
-                          {getInitials(
-                            userData?.userType === 'doctor' 
-                              ? appointment.patientName 
-                              : appointment.doctorName
-                          )}
+                <div className="appointments-list">
+                  {availableAppointments.map((appointment) => {
+                    const dateTime = formatDateTime(appointment.appointmentDate);
+                    return (
+                      <div key={appointment.id} className="appointment-card">
+                        <div className="appointment-info">
+                          <div className="participant-avatar">
+                            <div className="avatar-circle">
+                              {getInitials(
+                                userData?.userType === 'doctor' 
+                                  ? appointment.patientName 
+                                  : appointment.doctorName
+                              )}
+                            </div>
+                            <div className="status-indicator online"></div>
+                          </div>
+                          
+                          <div className="appointment-details">
+                            <h4>
+                              {userData?.userType === 'doctor' 
+                                ? appointment.patientName 
+                                : appointment.doctorName}
+                            </h4>
+                            <div className="appointment-meta">
+                              <span className="appointment-time">
+                                <Calendar size={16} />
+                                {dateTime.date} at {dateTime.time}
+                              </span>
+                              <span className="appointment-type">
+                                <Video size={16} />
+                                {appointment.type} • {appointment.reason}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="status-indicator online"></div>
+                        
+                        <Button 
+                          variant="primary" 
+                          onClick={() => handleStartCall(appointment)}
+                          className="start-call-button"
+                        >
+                          <Video size={18} />
+                          Start Call
+                        </Button>
                       </div>
-                      
-                      <div className="patient-info">
-                        <h4>
-                          {userData?.userType === 'doctor' 
-                            ? appointment.patientName 
-                            : appointment.doctorName}
-                        </h4>
-                        <p>Scheduled: {formatDateTime(appointment.appointmentDate)}</p>
-                        <span className="appointment-type">{appointment.type} • {appointment.reason}</span>
-                      </div>
-                      
-                      <Button 
-                        variant="primary" 
-                        onClick={() => handleStartCall(appointment)}
-                        className="start-call-btn"
-                      >
-                        <Video size={18} />
-                        Start Call
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ) : (
               <div className="empty-state">
-                <Users size={48} />
+                <Users size={64} />
                 <h3>No video appointments available</h3>
                 <p>
                   {userData?.userType === 'doctor' 
@@ -272,56 +298,77 @@ const VideoCall = () => {
                 <Button 
                   variant="outline" 
                   onClick={() => window.location.href = '/appointment'}
-                  style={{ marginTop: '1rem' }}
                 >
                   {userData?.userType === 'doctor' ? 'Manage Schedule' : 'Book Appointment'}
                 </Button>
               </div>
             )}
+          </div>
 
-            <div className="call-settings">
-              <h3>Call Preferences</h3>
-              <div className="settings-grid">
-                <label className="setting-item">
-                  <input 
-                    type="checkbox" 
-                    checked={!callSettings.isVideoOff}
-                    onChange={() => toggleSetting('isVideoOff')}
-                  />
-                  <Camera size={18} />
-                  <span>Enable camera</span>
-                </label>
-                
-                <label className="setting-item">
-                  <input 
-                    type="checkbox" 
-                    checked={!callSettings.isMuted}
-                    onChange={() => toggleSetting('isMuted')}
-                  />
-                  <Mic size={18} />
-                  <span>Enable microphone</span>
-                </label>
-                
-                <label className="setting-item">
-                  <input 
-                    type="checkbox" 
-                    checked={callSettings.isRecording}
-                    onChange={() => toggleSetting('isRecording')}
-                  />
-                  <Video size={18} />
-                  <span>Record session</span>
-                </label>
-                
-                <label className="setting-item">
-                  <input 
-                    type="checkbox" 
-                    checked={!callSettings.isSpeakerOff}
-                    onChange={() => toggleSetting('isSpeakerOff')}
-                  />
-                  <Volume2 size={18} />
-                  <span>Enable speaker</span>
-                </label>
+          {/* Call Preferences */}
+          <div className="setup-card preferences-card">
+            <div className="card-header">
+              <div className="header-icon">
+                <Settings size={24} />
               </div>
+              <div className="header-content">
+                <h3>Call Preferences</h3>
+                <p>Configure your call settings</p>
+              </div>
+            </div>
+            
+            <div className="preferences-list">
+              <label className="preference-item">
+                <div className="preference-info">
+                  <Camera size={20} />
+                  <span>Enable Camera</span>
+                </div>
+                <input 
+                  type="checkbox" 
+                  checked={!callSettings.isVideoOff}
+                  onChange={() => toggleSetting('isVideoOff')}
+                  className="preference-toggle"
+                />
+              </label>
+              
+              <label className="preference-item">
+                <div className="preference-info">
+                  <Mic size={20} />
+                  <span>Enable Microphone</span>
+                </div>
+                <input 
+                  type="checkbox" 
+                  checked={!callSettings.isMuted}
+                  onChange={() => toggleSetting('isMuted')}
+                  className="preference-toggle"
+                />
+              </label>
+              
+              <label className="preference-item">
+                <div className="preference-info">
+                  <Volume2 size={20} />
+                  <span>Enable Speaker</span>
+                </div>
+                <input 
+                  type="checkbox" 
+                  checked={!callSettings.isSpeakerOff}
+                  onChange={() => toggleSetting('isSpeakerOff')}
+                  className="preference-toggle"
+                />
+              </label>
+              
+              <label className="preference-item">
+                <div className="preference-info">
+                  <Activity size={20} />
+                  <span>Record Session</span>
+                </div>
+                <input 
+                  type="checkbox" 
+                  checked={callSettings.isRecording}
+                  onChange={() => toggleSetting('isRecording')}
+                  className="preference-toggle"
+                />
+              </label>
             </div>
           </div>
         </div>
@@ -330,158 +377,162 @@ const VideoCall = () => {
   }
 
   return (
-    <div className="page fade-in">
-      <div className="video-call-interface">
-        <div className="call-header">
-          <div className="call-info">
-            <h2>
-              Video Call with {
-                userData?.userType === 'doctor' 
-                  ? selectedAppointment?.patientName 
-                  : selectedAppointment?.doctorName
-              }
-            </h2>
-            <div className="call-status">
-              <div className="status-indicator online"></div>
-              <span>Connected</span>
-            </div>
-          </div>
-          
-          <div className="call-timer">
-            {formatDuration(callDuration)}
+    <div className="video-call-active">
+      <div className="call-header">
+        <div className="call-info">
+          <h2>
+            Video Call with {
+              userData?.userType === 'doctor' 
+                ? selectedAppointment?.patientName 
+                : selectedAppointment?.doctorName
+            }
+          </h2>
+          <div className="call-status">
+            <div className="status-indicator online"></div>
+            <span>Connected</span>
           </div>
         </div>
+        
+        <div className="call-timer">
+          <Clock size={20} />
+          {formatDuration(callDuration)}
+        </div>
+      </div>
 
-        <div className="video-container">
-          <div className="remote-video">
-            <div className="video-placeholder">
-              <div className="avatar">
-                {getInitials(
-                  userData?.userType === 'doctor' 
+      <div className="video-interface">
+        <div className="video-main">
+          <div className="remote-participant">
+            <div className="participant-video">
+              <div className="video-placeholder">
+                <div className="participant-avatar large">
+                  {getInitials(
+                    userData?.userType === 'doctor' 
+                      ? selectedAppointment?.patientName 
+                      : selectedAppointment?.doctorName
+                  )}
+                </div>
+                <div className="participant-name">
+                  {userData?.userType === 'doctor' 
                     ? selectedAppointment?.patientName 
-                    : selectedAppointment?.doctorName
+                    : selectedAppointment?.doctorName}
+                </div>
+                {callSettings.isVideoOff && (
+                  <div className="video-status">Camera Off</div>
                 )}
               </div>
-              <p>
-                {userData?.userType === 'doctor' 
-                  ? selectedAppointment?.patientName 
-                  : selectedAppointment?.doctorName}
-              </p>
-              {callSettings.isVideoOff && <p className="video-status">Camera Off</p>}
             </div>
           </div>
 
-          <div className="local-video">
-            <div className="video-placeholder small">
-              <div className="avatar small">
-                {getInitials(userData?.displayName || 'You')}
+          <div className="local-participant">
+            <div className="participant-video small">
+              <div className="video-placeholder">
+                <div className="participant-avatar">
+                  {getInitials(userData?.displayName || 'You')}
+                </div>
+                <div className="participant-name">You</div>
+                {callSettings.isVideoOff && (
+                  <div className="video-status">Camera Off</div>
+                )}
               </div>
-              <p>You</p>
-              {callSettings.isVideoOff && <p className="video-status">Camera Off</p>}
             </div>
           </div>
 
           {callSettings.screenSharing && (
             <div className="screen-share-indicator">
               <Monitor size={20} />
-              <span>Screen Sharing</span>
+              <span>Screen Sharing Active</span>
             </div>
           )}
         </div>
 
         <div className="call-controls">
-          <Button 
-            variant={callSettings.isMuted ? "danger" : "outline"}
-            onClick={() => toggleSetting('isMuted')}
-            className="control-btn"
-            title={callSettings.isMuted ? "Unmute" : "Mute"}
-          >
-            {callSettings.isMuted ? <MicOff size={24} /> : <Mic size={24} />}
-          </Button>
+          <div className="controls-row">
+            <Button 
+              variant={callSettings.isMuted ? "danger" : "outline"}
+              onClick={() => toggleSetting('isMuted')}
+              className="control-button"
+              title={callSettings.isMuted ? "Unmute" : "Mute"}
+            >
+              {callSettings.isMuted ? <MicOff size={24} /> : <Mic size={24} />}
+            </Button>
 
-          <Button 
-            variant={callSettings.isVideoOff ? "danger" : "outline"}
-            onClick={() => toggleSetting('isVideoOff')}
-            className="control-btn"
-            title={callSettings.isVideoOff ? "Turn on camera" : "Turn off camera"}
-          >
-            {callSettings.isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
-          </Button>
+            <Button 
+              variant={callSettings.isVideoOff ? "danger" : "outline"}
+              onClick={() => toggleSetting('isVideoOff')}
+              className="control-button"
+              title={callSettings.isVideoOff ? "Turn on camera" : "Turn off camera"}
+            >
+              {callSettings.isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
+            </Button>
 
-          <Button 
-            variant={callSettings.isSpeakerOff ? "danger" : "outline"}
-            onClick={() => toggleSetting('isSpeakerOff')}
-            className="control-btn"
-            title={callSettings.isSpeakerOff ? "Unmute speaker" : "Mute speaker"}
-          >
-            {callSettings.isSpeakerOff ? <VolumeX size={24} /> : <Volume2 size={24} />}
-          </Button>
+            <Button 
+              variant={callSettings.isSpeakerOff ? "danger" : "outline"}
+              onClick={() => toggleSetting('isSpeakerOff')}
+              className="control-button"
+              title={callSettings.isSpeakerOff ? "Unmute speaker" : "Mute speaker"}
+            >
+              {callSettings.isSpeakerOff ? <VolumeX size={24} /> : <Volume2 size={24} />}
+            </Button>
 
-          <Button 
-            variant="outline"
-            onClick={() => toggleSetting('screenSharing')}
-            className="control-btn"
-            title="Share screen"
-          >
-            <Monitor size={24} />
-          </Button>
+            <Button 
+              variant="outline"
+              onClick={() => toggleSetting('screenSharing')}
+              className="control-button"
+              title="Share screen"
+            >
+              <Monitor size={24} />
+            </Button>
 
-          <Button 
-            variant="outline"
-            className="control-btn"
-            title="Open chat"
-          >
-            <MessageCircle size={24} />
-          </Button>
+            <Button 
+              variant="outline"
+              className="control-button"
+              title="Open chat"
+            >
+              <MessageCircle size={24} />
+            </Button>
 
-          <Button 
-            variant={callSettings.isRecording ? "danger" : "outline"}
-            onClick={() => toggleSetting('isRecording')}
-            className="control-btn"
-            title={callSettings.isRecording ? "Stop recording" : "Start recording"}
-          >
-            <Video size={24} />
-          </Button>
-
-          <Button 
-            variant="danger"
-            onClick={handleEndCall}
-            className="control-btn end-call"
-          >
-            <PhoneOff size={24} />
-            End Call
-          </Button>
+            <Button 
+              variant="danger"
+              onClick={handleEndCall}
+              className="control-button end-call"
+            >
+              <PhoneOff size={24} />
+              End Call
+            </Button>
+          </div>
         </div>
+      </div>
 
-        <div className="call-notes">
+      <div className="call-notes-section">
+        <div className="notes-card">
           <h3>Call Notes</h3>
           <textarea 
             placeholder="Add notes during the call..."
-            className="notes-input"
+            className="notes-textarea"
             rows="4"
             value={callNotes}
             onChange={(e) => setCallNotes(e.target.value)}
           />
-          <div className="notes-actions">
+          <div className="notes-footer">
             <Button variant="outline" size="small">
               Save Notes
             </Button>
-            <small style={{ color: 'var(--text-muted)' }}>
+            <span className="notes-hint">
               Notes will be automatically saved when the call ends
-            </small>
+            </span>
           </div>
         </div>
 
         {/* Call Quality Indicator */}
         <div className="call-quality">
-          <div className="quality-indicator good">
-            <div className="signal-bars">
-              <div className="bar active"></div>
-              <div className="bar active"></div>
-              <div className="bar active"></div>
-              <div className="bar active"></div>
+          <div className="quality-status good">
+            <div className="signal-strength">
+              <div className="signal-bar active"></div>
+              <div className="signal-bar active"></div>
+              <div className="signal-bar active"></div>
+              <div className="signal-bar active"></div>
             </div>
-            <span>Excellent connection</span>
+            <span>Excellent Connection</span>
           </div>
         </div>
       </div>

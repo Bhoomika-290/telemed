@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Users, CheckCircle, Clock, Plus, Video, MessageCircle, FileText } from 'lucide-react';
+import { Calendar, Users, CheckCircle, Clock, Plus, Video, MessageCircle, FileText, Activity, Heart, TrendingUp, Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { appointmentService, analyticsService } from '../utils/firestoreUtils';
 import Button from '../components/Common/Button';
@@ -37,7 +37,7 @@ const Home = () => {
           currentUser.uid, 
           userData.userType
         );
-        setRecentAppointments(appointments.slice(0, 3)); // Get latest 3 appointments
+        setRecentAppointments(appointments.slice(0, 3));
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -58,101 +58,51 @@ const Home = () => {
     return `Good evening, ${name}!`;
   };
 
-  const formatDate = (dateString) => {
+  const formatDateTime = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatsConfig = () => {
-    if (userData?.userType === 'doctor') {
-      return [
-        { 
-          title: 'Total Appointments', 
-          value: stats.totalAppointments || 0, 
-          icon: Calendar,
-          color: 'primary'
-        },
-        { 
-          title: 'Completed Consultations', 
-          value: stats.completedConsultations || 0, 
-          icon: CheckCircle,
-          color: 'success'
-        },
-        { 
-          title: 'Pending Appointments', 
-          value: stats.pendingAppointments || 0, 
-          icon: Clock,
-          color: 'warning'
-        },
-        { 
-          title: 'Active Patients', 
-          value: stats.activePatients || 0, 
-          icon: Users,
-          color: 'info'
-        }
-      ];
-    } else {
-      return [
-        { 
-          title: 'My Appointments', 
-          value: stats.totalAppointments || 0, 
-          icon: Calendar,
-          color: 'primary'
-        },
-        { 
-          title: 'Total Consultations', 
-          value: stats.totalConsultations || 0, 
-          icon: CheckCircle,
-          color: 'success'
-        },
-        { 
-          title: 'Upcoming', 
-          value: stats.pendingAppointments || 0, 
-          icon: Clock,
-          color: 'warning'
-        },
-        { 
-          title: 'Health Records', 
-          value: stats.healthRecords || 0, 
-          icon: FileText,
-          color: 'info'
-        }
-      ];
-    }
+    return {
+      date: date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      }),
+      time: date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    };
   };
 
   const getQuickActions = () => {
     if (userData?.userType === 'doctor') {
       return [
         {
-          title: 'View Appointments',
+          title: 'View Schedule',
           icon: Calendar,
           action: () => navigate('/appointment'),
-          color: 'primary'
+          color: 'blue',
+          description: 'Manage appointments'
         },
         {
           title: 'Start Video Call',
           icon: Video,
           action: () => navigate('/video-call'),
-          color: 'success'
+          color: 'green',
+          description: 'Begin consultation'
         },
         {
           title: 'Patient Messages',
           icon: MessageCircle,
           action: () => navigate('/chatroom'),
-          color: 'info'
+          color: 'purple',
+          description: 'Chat with patients'
         },
         {
           title: 'Consultations',
           icon: FileText,
           action: () => navigate('/consult'),
-          color: 'warning'
+          color: 'orange',
+          description: 'Medical records'
         }
       ];
     } else {
@@ -161,25 +111,29 @@ const Home = () => {
           title: 'Book Appointment',
           icon: Plus,
           action: () => navigate('/appointment'),
-          color: 'primary'
+          color: 'blue',
+          description: 'Schedule with doctor'
         },
         {
           title: 'Join Video Call',
           icon: Video,
           action: () => navigate('/video-call'),
-          color: 'success'
+          color: 'green',
+          description: 'Start consultation'
         },
         {
           title: 'Message Doctor',
           icon: MessageCircle,
           action: () => navigate('/chatroom'),
-          color: 'info'
+          color: 'purple',
+          description: 'Chat with healthcare provider'
         },
         {
           title: 'My Records',
           icon: FileText,
           action: () => navigate('/consult'),
-          color: 'warning'
+          color: 'orange',
+          description: 'View medical history'
         }
       ];
     }
@@ -187,148 +141,283 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="page">
+      <div className="dashboard-loading">
         <LoadingSpinner size="large" message="Loading your dashboard..." />
       </div>
     );
   }
 
   return (
-    <div className="page fade-in">
-      <div className="page-header">
-        <div>
+    <div className="dashboard">
+      {/* Dashboard Header */}
+      <div className="dashboard-header">
+        <div className="welcome-section">
           <h1>{getGreeting()}</h1>
-          <p>
-            {userData?.userType === 'doctor' 
-              ? "Here's your practice overview for today." 
-              : "Welcome to your health dashboard."}
-          </p>
+          <p>Welcome to your {userData?.userType === 'doctor' ? 'practice' : 'health'} dashboard</p>
         </div>
-        <Button 
-          variant="primary" 
-          onClick={() => navigate('/appointment')}
-          className="scale-in"
-        >
-          <Plus size={20} />
-          {userData?.userType === 'doctor' ? 'New Appointment' : 'Book Appointment'}
-        </Button>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="stats-grid">
-        {getStatsConfig().map((stat, index) => {
-          const IconComponent = stat.icon;
-          return (
-            <div key={index} className="stat-card slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
-              <div className={`stat-icon ${stat.color}`}>
-                <IconComponent size={32} />
-              </div>
-              <div className="stat-content">
-                <h3>{stat.value}</h3>
-                <p>{stat.title}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Recent Appointments */}
-      <div className="dashboard-section slide-up" style={{ animationDelay: '0.4s' }}>
-        <div className="section-header">
-          <h2>Recent Appointments</h2>
+        <div className="header-actions">
           <Button 
-            variant="outline" 
+            variant="primary" 
             onClick={() => navigate('/appointment')}
+            className="main-cta"
           >
-            View All
+            <Plus size={18} />
+            {userData?.userType === 'doctor' ? 'New Appointment' : 'Book Appointment'}
           </Button>
         </div>
-        
-        {recentAppointments.length > 0 ? (
-          <div className="appointments-list">
-            {recentAppointments.map((appointment) => (
-              <div key={appointment.id} className="appointment-item">
-                <div className="appointment-info">
-                  <h4>
-                    {userData?.userType === 'doctor' 
-                      ? appointment.patientName 
-                      : appointment.doctorName}
-                  </h4>
-                  <p>
-                    {formatDate(appointment.appointmentDate)} • {appointment.type}
-                  </p>
-                </div>
-                <div className={`appointment-status status-${appointment.status?.toLowerCase()}`}>
-                  {appointment.status || 'Scheduled'}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">
-            <Calendar size={48} />
-            <h3>No appointments yet</h3>
-            <p>
-              {userData?.userType === 'doctor' 
-                ? "You don't have any appointments scheduled." 
-                : "You haven't booked any appointments yet."}
-            </p>
-            <Button 
-              variant="primary" 
-              onClick={() => navigate('/appointment')}
-              style={{ marginTop: '1rem' }}
-            >
-              {userData?.userType === 'doctor' ? 'Manage Schedule' : 'Book First Appointment'}
-            </Button>
-          </div>
-        )}
       </div>
 
-      {/* Quick Actions */}
-      <div className="quick-actions slide-up" style={{ animationDelay: '0.6s' }}>
-        <h2>Quick Actions</h2>
-        <div className="actions-grid">
-          {getQuickActions().map((action, index) => {
-            const IconComponent = action.icon;
-            return (
-              <Button 
-                key={index}
-                variant="outline" 
-                onClick={action.action}
-                className="action-btn"
-              >
-                <IconComponent size={24} />
-                {action.title}
-              </Button>
-            );
-          })}
+      {/* Stats Overview */}
+      <div className="stats-overview">
+        <div className="stats-row">
+          <div className="stat-card blue">
+            <div className="stat-icon">
+              <Calendar size={24} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.totalAppointments || 0}</div>
+              <div className="stat-label">Total Appointments</div>
+            </div>
+          </div>
+          
+          <div className="stat-card green">
+            <div className="stat-icon">
+              <CheckCircle size={24} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.completedConsultations || 0}</div>
+              <div className="stat-label">
+                {userData?.userType === 'doctor' ? 'Completed' : 'Total'} Consultations
+              </div>
+            </div>
+          </div>
+          
+          <div className="stat-card orange">
+            <div className="stat-icon">
+              <Clock size={24} />
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.pendingAppointments || 0}</div>
+              <div className="stat-label">Pending Appointments</div>
+            </div>
+          </div>
+          
+          <div className="stat-card purple">
+            <div className="stat-icon">
+              {userData?.userType === 'doctor' ? <Users size={24} /> : <Heart size={24} />}
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.activePatients || stats.healthRecords || 0}</div>
+              <div className="stat-label">
+                {userData?.userType === 'doctor' ? 'Active Patients' : 'Health Records'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="dashboard-grid">
+        {/* Recent Appointments */}
+        <div className="dashboard-card appointments-card">
+          <div className="card-header">
+            <h2>Recent Appointments</h2>
+            <Button 
+              variant="outline" 
+              size="small"
+              onClick={() => navigate('/appointment')}
+            >
+              View All
+            </Button>
+          </div>
+          
+          <div className="card-content">
+            {recentAppointments.length > 0 ? (
+              <div className="appointments-list">
+                {recentAppointments.map((appointment) => {
+                  const dateTime = formatDateTime(appointment.appointmentDate);
+                  return (
+                    <div key={appointment.id} className="appointment-item">
+                      <div className="appointment-info">
+                        <div className="appointment-title">
+                          {userData?.userType === 'doctor' 
+                            ? appointment.patientName 
+                            : appointment.doctorName}
+                        </div>
+                        <div className="appointment-details">
+                          {dateTime.date} at {dateTime.time} • {appointment.type}
+                        </div>
+                      </div>
+                      <div className={`appointment-status status-${appointment.status?.toLowerCase()}`}>
+                        {appointment.status || 'Scheduled'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <Calendar size={48} />
+                <div className="empty-title">No appointments yet</div>
+                <div className="empty-description">
+                  {userData?.userType === 'doctor' 
+                    ? "You don't have any appointments scheduled." 
+                    : "You haven't booked any appointments yet."}
+                </div>
+                <Button 
+                  variant="primary" 
+                  onClick={() => navigate('/appointment')}
+                  size="small"
+                >
+                  {userData?.userType === 'doctor' ? 'Manage Schedule' : 'Book First Appointment'}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="dashboard-card actions-card">
+          <div className="card-header">
+            <h2>Quick Actions</h2>
+          </div>
+          
+          <div className="card-content">
+            <div className="actions-grid">
+              {getQuickActions().map((action, index) => {
+                const IconComponent = action.icon;
+                return (
+                  <div 
+                    key={index}
+                    className={`action-item ${action.color}`}
+                    onClick={action.action}
+                  >
+                    <div className="action-icon">
+                      <IconComponent size={20} />
+                    </div>
+                    <div className="action-content">
+                      <div className="action-title">{action.title}</div>
+                      <div className="action-description">{action.description}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Activity Feed */}
+        <div className="dashboard-card activity-card">
+          <div className="card-header">
+            <h2>Recent Activity</h2>
+          </div>
+          
+          <div className="card-content">
+            <div className="activity-list">
+              <div className="activity-item">
+                <div className="activity-icon green">
+                  <CheckCircle size={16} />
+                </div>
+                <div className="activity-content">
+                  <div className="activity-title">Consultation completed</div>
+                  <div className="activity-time">2 hours ago</div>
+                </div>
+              </div>
+              
+              <div className="activity-item">
+                <div className="activity-icon blue">
+                  <Calendar size={16} />
+                </div>
+                <div className="activity-content">
+                  <div className="activity-title">New appointment scheduled</div>
+                  <div className="activity-time">5 hours ago</div>
+                </div>
+              </div>
+              
+              <div className="activity-item">
+                <div className="activity-icon purple">
+                  <MessageCircle size={16} />
+                </div>
+                <div className="activity-content">
+                  <div className="activity-title">New message received</div>
+                  <div className="activity-time">1 day ago</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Health Overview (for patients) / Practice Stats (for doctors) */}
+        <div className="dashboard-card overview-card">
+          <div className="card-header">
+            <h2>
+              {userData?.userType === 'doctor' ? 'Practice Overview' : 'Health Overview'}
+            </h2>
+          </div>
+          
+          <div className="card-content">
+            {userData?.userType === 'doctor' ? (
+              <div className="practice-stats">
+                <div className="practice-stat">
+                  <div className="practice-stat-icon">
+                    <TrendingUp size={20} />
+                  </div>
+                  <div className="practice-stat-content">
+                    <div className="practice-stat-number">+15%</div>
+                    <div className="practice-stat-label">Patient Growth</div>
+                  </div>
+                </div>
+                
+                <div className="practice-stat">
+                  <div className="practice-stat-icon">
+                    <Activity size={20} />
+                  </div>
+                  <div className="practice-stat-content">
+                    <div className="practice-stat-number">4.8/5</div>
+                    <div className="practice-stat-label">Average Rating</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="health-metrics">
+                <div className="health-metric">
+                  <div className="metric-label">Last Checkup</div>
+                  <div className="metric-value">3 months ago</div>
+                </div>
+                
+                <div className="health-metric">
+                  <div className="metric-label">Next Appointment</div>
+                  <div className="metric-value">
+                    {recentAppointments.length > 0 ? 'Tomorrow' : 'Not scheduled'}
+                  </div>
+                </div>
+                
+                <div className="health-metric">
+                  <div className="metric-label">Health Score</div>
+                  <div className="metric-value">Good</div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Welcome Message for New Users */}
       {stats.totalAppointments === 0 && (
-        <div className="dashboard-section slide-up" style={{ animationDelay: '0.8s' }}>
-          <div className="welcome-message">
+        <div className="welcome-banner">
+          <div className="welcome-content">
             <h2>Welcome to TeleMed+! 🎉</h2>
             <p>
               {userData?.userType === 'doctor' 
-                ? "Start by setting up your availability and managing your patient appointments."
-                : "Begin your healthcare journey by booking your first appointment with our qualified doctors."}
+                ? "Start by managing your schedule and connecting with patients."
+                : "Begin your healthcare journey by booking your first appointment."}
             </p>
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <Button 
-                variant="primary" 
-                onClick={() => navigate('/appointment')}
-              >
-                {userData?.userType === 'doctor' ? 'Manage Schedule' : 'Book Appointment'}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/chatroom')}
-              >
-                Explore Features
-              </Button>
-            </div>
+            <Button 
+              variant="primary" 
+              onClick={() => navigate('/appointment')}
+            >
+              {userData?.userType === 'doctor' ? 'Set Up Schedule' : 'Book First Appointment'}
+            </Button>
           </div>
         </div>
       )}

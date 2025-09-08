@@ -38,27 +38,48 @@ const PublicRoute = ({ children }) => {
   return !currentUser ? children : <Navigate to="/home" />;
 };
 
+// Home Route Component (shows different content based on auth status)
+const HomeRoute = () => {
+  const { currentUser, loading } = useAuth();
+  
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+  
+  // If user is authenticated, show dashboard
+  if (currentUser) {
+    return (
+      <Layout>
+        <Home />
+      </Layout>
+    );
+  }
+  
+  // If user is not authenticated, show public landing page
+  return <PublicHome />;
+};
+
 function AppRoutes() {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/login" element={
         <PublicRoute>
           <Login />
         </PublicRoute>
       } />
+      
       <Route path="/register" element={
         <PublicRoute>
           <Register />
         </PublicRoute>
       } />
-      <Route path="/" element={<Navigate to="/home" />} />
-      <Route path="/home" element={
-        <ProtectedRoute>
-          <Layout>
-            <Home />
-          </Layout>
-        </ProtectedRoute>
-      } />
+      
+      {/* Home Route - Dynamic based on auth status */}
+      <Route path="/" element={<HomeRoute />} />
+      <Route path="/home" element={<HomeRoute />} />
+      
+      {/* Protected Routes */}
       <Route path="/appointment" element={
         <ProtectedRoute>
           <Layout>
@@ -66,6 +87,7 @@ function AppRoutes() {
           </Layout>
         </ProtectedRoute>
       } />
+      
       <Route path="/consult" element={
         <ProtectedRoute>
           <Layout>
@@ -73,6 +95,7 @@ function AppRoutes() {
           </Layout>
         </ProtectedRoute>
       } />
+      
       <Route path="/video-call" element={
         <ProtectedRoute>
           <Layout>
@@ -80,6 +103,7 @@ function AppRoutes() {
           </Layout>
         </ProtectedRoute>
       } />
+      
       <Route path="/chatroom" element={
         <ProtectedRoute>
           <Layout>
@@ -87,6 +111,9 @@ function AppRoutes() {
           </Layout>
         </ProtectedRoute>
       } />
+      
+      {/* Catch all route - redirect to home */}
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }
