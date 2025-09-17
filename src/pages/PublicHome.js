@@ -23,13 +23,13 @@ import {
   UserPlus,
   FileText,
   Award,
-  Lock
+  Lock,
 } from 'lucide-react';
 import Button from '../components/Common/Button';
 
 const PublicHome = () => {
   const navigate = useNavigate();
-  const { loginWithPopup, isAuthenticated , logout } = useAuth0();
+  const { loginWithPopup, isAuthenticated , logout,user } = useAuth0();
 
   const features = [
     {
@@ -188,11 +188,19 @@ const PublicHome = () => {
               <a href="#services">Services</a>
               <a href="#doctors">Doctors</a>
               <a href="#about">About</a>
+
             
             { isAuthenticated ? (
+            <>
             <div className="header-actions">
             <Button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>logout</Button>
             </div>
+            <img 
+                src={user.picture} 
+               alt={user.name} 
+                className="profile"
+            />
+            </>
             ) : (
             <div className="header-actions">
               <Button onClick={() => loginWithPopup()}>Login</Button>
