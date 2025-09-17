@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
+
 import { 
   Stethoscope, 
   Video, 
@@ -27,6 +29,7 @@ import Button from '../components/Common/Button';
 
 const PublicHome = () => {
   const navigate = useNavigate();
+  const { loginWithPopup, isAuthenticated , logout } = useAuth0();
 
   const features = [
     {
@@ -185,22 +188,17 @@ const PublicHome = () => {
               <a href="#services">Services</a>
               <a href="#doctors">Doctors</a>
               <a href="#about">About</a>
-            </nav>
             
+            { isAuthenticated ? (
             <div className="header-actions">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/login')}
-              >
-                Sign In
-              </Button>
-              <Button 
-                variant="primary" 
-                onClick={() => navigate('/register')}
-              >
-                Get Started
-              </Button>
+            <Button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>logout</Button>
             </div>
+            ) : (
+            <div className="header-actions">
+              <Button onClick={() => loginWithPopup()}>Login</Button>
+            </div>
+            )}
+            </nav>
           </div>
         </div>
       </header>
